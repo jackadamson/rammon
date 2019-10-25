@@ -1,9 +1,13 @@
 # Rammon (RAM Monitor)
 
-Rammon is a daemon that visually alerts when a machine is low on memory
+Rammon is a daemon that visually alerts when a machine is low on memory  
+
+Notifications are sent using dbus meaning it's supported by a wide range of Linux window managers
+such as Gnome, KDE and many more.
 
 ## Requirements
 
+- Linux
 - Python3.6
 - systemd (required for auto-start)
 - PyGI (not packaged on pypi, python3-gi for Ubuntu, python-gobject for ArchLinux)

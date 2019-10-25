@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="rammon",
-    version="0.1.0",
+    version="0.2.0",
     author="Jack Adamson",
     author_email="jack@mrfluffybunny.com",
     description="A low-memory alert daemon",

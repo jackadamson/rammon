@@ -2,3 +2,4 @@ pydbus
 python-daemon
 psutil
 dataclasses
+# systemd

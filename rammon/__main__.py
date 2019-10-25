@@ -1,12 +1,12 @@
 import argparse
-from rammon.service import start, stop, status, enable
+from rammon.commands import start, stop, status, enable, disable, config
 
 
 def main():
     parser = argparse.ArgumentParser(
         description="Notifies you when low on memory",
         add_help=False,
-        usage="""rammon [-h | --help] [-d | --no-daemon] [command]
+        usage="""rammon [-h | --help] [-d | --no-daemon] [--set OPTION=value] [command]
 
     Commands are:
        start      Start the memory monitor
@@ -22,6 +22,7 @@ def main():
     )
     parser.add_argument("-h", "--help", action="store_true")
     parser.add_argument("-d", "--no-daemon", action="store_false", dest="daemon")
+    parser.add_argument("--set", action="append", dest="settings")
     parser.add_argument(
         "command",
         default="start",
@@ -32,11 +33,15 @@ def main():
     if args.help:
         print(parser.usage)
         return
-
     # TODO: Workout a more elegant of passing through the arguments
-    {"start": start, "stop": stop, "status": status, "enable": enable}[args.command](
-        **dict(args._get_kwargs())
-    )
+    {
+        "start": start,
+        "stop": stop,
+        "status": status,
+        "enable": enable,
+        "disable": disable,
+        "config": config,
+    }[args.command](**dict(args._get_kwargs()))
 
 
 if __name__ == "__main__":
