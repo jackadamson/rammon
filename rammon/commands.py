@@ -5,15 +5,15 @@ import sys
 from typing import Union, List
 from dataclasses import asdict, fields
 from pydbus import SessionBus
-from gi.repository import GLib
 from gi.repository.GLib import GError
 from daemon import DaemonContext
 from daemon.pidfile import PIDLockFile
-from psutil import Process, NoSuchProcess
+from psutil import Process, NoSuchProcess, TimeoutExpired
 from rammon.rammon import RamMonitor
 from rammon.config import RAMMON_PATH, conf
 from rammon.logging import logger
 from rammon.systemd import try_systemd_start, try_systemd_stop, is_enabled
+from rammon.signals import set_handlers
 
 
 def start(daemon=True, **kwargs):
@@ -40,29 +40,14 @@ def start(daemon=True, **kwargs):
             sys.exit(0)
         else:
             mon = RamMonitor()
+            set_handlers(mon)
             logger.info("Starting without systemd...")
-            with DaemonContext(
-                umask=0o077,
-                pidfile=lock,
-                detach_process=daemon,
-                signal_map={signal.SIGTERM: mon.stop},
-            ):
+            with DaemonContext(umask=0o077, pidfile=lock, detach_process=daemon):
                 mon.start()
     else:
         with lock:
             mon = RamMonitor()
-            GLib.unix_signal_add(
-                GLib.PRIORITY_HIGH,
-                signal.SIGTERM,  # for the given signal
-                mon.stop,  # on this signal, run this function
-                signal.SIGTERM,  # with this argument
-            )
-            GLib.unix_signal_add(
-                GLib.PRIORITY_HIGH,
-                signal.SIGINT,  # for the given signal
-                mon.stop,  # on this signal, run this function
-                signal.SIGINT,  # with this argument
-            )
+            set_handlers(mon)
             mon.start()
 
 
@@ -70,21 +55,26 @@ def stop(**kwargs):
     lock = PIDLockFile(os.path.join(RAMMON_PATH, "rammon.pid"))
     if try_systemd_stop():
         logger.info("Stopping rammon daemon with systemd...")
-    else:
-        if lock.is_locked():
+    if lock.is_locked():
+        try:
+            proc = Process(lock.read_pid())
+            proc.terminate()
             try:
-                proc = Process(lock.read_pid())
-                proc.terminate()
-                logger.info("Rammon stopped successfully")
-            except NoSuchProcess:
-                logger.warning(
-                    "Rammon was already stopped, but had not stopped cleanly.\n"
-                    "Breaking pidfile lock..."
-                )
+                proc.wait(1)
+            except TimeoutExpired:
+                print("Rammon did not stop gracefully, killing it...")
+                proc.kill()
                 lock.break_lock()
-        else:
-            logger.error("Rammon is already stopped")
-            sys.exit(1)
+            logger.info("Rammon stopped successfully")
+        except NoSuchProcess:
+            logger.warning(
+                "Rammon was already stopped, but had not stopped cleanly.\n"
+                "Breaking pidfile lock..."
+            )
+            lock.break_lock()
+    else:
+        logger.error("Rammon is already stopped")
+        sys.exit(1)
 
 
 def status(**kwargs):
@@ -93,9 +83,8 @@ def status(**kwargs):
         try:
             Process(lock.read_pid())
             print(
-                "Rammon is running" + ", and auto-start is enabled"
-                if is_enabled()
-                else ""
+                "Rammon is running"
+                + (", and auto-start is enabled" if is_enabled() else "")
             )
         except NoSuchProcess:
             print(
@@ -105,7 +94,8 @@ def status(**kwargs):
             lock.break_lock()
     else:
         print(
-            "Rammon is stopped" + ", but auto-start is enabled" if is_enabled() else ""
+            "Rammon is stopped"
+            + (", but auto-start is enabled" if is_enabled() else "")
         )
 
 
