@@ -1,9 +1,10 @@
 # Rammon (RAM Monitor)
 
-Rammon is a daemon that visually alerts when a machine is low on memory  
+Rammon is a tool to alert you when your machine is running low on memory with a desktop notification.
 
 Notifications are sent using dbus meaning it's supported by a wide range of Linux window managers
 such as Gnome, KDE and many more.
+
 
 ## Requirements
 
