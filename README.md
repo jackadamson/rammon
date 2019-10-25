@@ -2,9 +2,10 @@
 
 Rammon is a tool to alert you when your machine is running low on memory with a desktop notification.
 
+![Rammon Screenshot](https://raw.githubusercontent.com/jackadamson/rammon/master/screenshots/screenshot1.png)
+
 Notifications are sent using dbus meaning it's supported by a wide range of Linux window managers
 such as Gnome, KDE and many more.
-
 
 ## Requirements
 
