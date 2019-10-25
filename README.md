@@ -16,7 +16,7 @@ such as Gnome, KDE and many more.
 ## Usage
 
 ```
-rammon [-h | --help] [-d | --no-daemon] [command]
+rammon [-h | --help] [-d | --no-daemon] [--set OPTION=value] [command]
 
     Commands are:
        start      Start the memory monitor
@@ -28,5 +28,5 @@ rammon [-h | --help] [-d | --no-daemon] [command]
 
     Check command options with:
        rammon <command> -h
-    
+
 ```
