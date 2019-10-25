@@ -1,0 +1,5 @@
+pydbus
+python-daemon
+vext.gi
+psutil
+dataclasses
